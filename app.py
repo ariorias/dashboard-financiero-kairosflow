@@ -41,17 +41,29 @@ sucursal_filtro = st.sidebar.multiselect("Sucursal", options=sucursales, default
 
 df_filtrado = df[df['Mes'].isin(mes_filtro) & df['Sucursal'].isin(sucursal_filtro)]
 
-# Gráficos
+# Gráfico de evolución por filtro
 st.markdown("### 📊 Evolución de Ingresos y Egresos")
-grafico = px.line(df_filtrado.groupby(['Mes'])[['Ingresos', 'Egresos']].sum().reset_index(), 
-                  x='Mes', y=['Ingresos', 'Egresos'], markers=True)
+
+if len(sucursal_filtro) > 1:
+    titulo = " (Total consolidado de sucursales seleccionadas)"
+elif len(sucursal_filtro) == 1:
+    titulo = f" ({sucursal_filtro[0]})"
+else:
+    titulo = " (Todas las sucursales)"
+
+df_evolucion = df_filtrado.groupby(['Mes'])[['Ingresos', 'Egresos']].sum().reset_index()
+grafico = px.line(df_evolucion, x='Mes', y=['Ingresos', 'Egresos'], markers=True,
+                  labels={'value': 'Monto', 'variable': 'Concepto'},
+                  title=f"Evolución financiera{titulo}")
 st.plotly_chart(grafico, use_container_width=True)
 
+# Gráfico por rubro
 st.markdown("### 🔍 Detalle por Rubro")
 fig_rubro = px.bar(df_filtrado.groupby('Rubro')[['Ingresos', 'Egresos']].sum().reset_index(), 
                    x='Rubro', y=['Ingresos', 'Egresos'], barmode='group')
 st.plotly_chart(fig_rubro, use_container_width=True)
 
+# Tabla detallada
 st.markdown("### 📋 Tabla Detallada")
 st.dataframe(df_filtrado.sort_values(by='Mes'), use_container_width=True)
 
